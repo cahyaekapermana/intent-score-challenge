@@ -1,5 +1,6 @@
 package id.putraprima.skorbola;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -13,111 +14,139 @@ import android.widget.TextView;
 
 import java.io.IOException;
 
+import id.putraprima.skorbola.model.Data;
+
 public class MatchActivity extends AppCompatActivity {
 
-    TextView homeName;
-    TextView awayName;
+    private static final String HASILKEY = "hasil";
 
-    TextView awayScore;
-    TextView homeScore;
+    private TextView tvHome;
+    private TextView tvAway;
+    private TextView tvSkorHome;
+    private TextView tvSkorAway;
+    private ImageView imgHomeLogo;
+    private ImageView imgAwayLogo;
 
-    ImageView homeIcon;
-    ImageView awayIcon;
+    private TextView tvScorerHome;
+    private TextView tvScorerAway;
 
-    Uri imageUriHome;
-    Uri imageUriAway;
+    private int scoreHome=0;
+    private int scoreAway=0;
 
-    Bitmap bitmapHome;
-    Bitmap bitmapAway;
+    private Bitmap bitmapHome;
+    private Bitmap bitmapAway;
 
-    String homeTeam;
-    String awayTeam;
+    private Uri uriHome;
+    private Uri uriAway;
 
-    int scoreHome = 0;
-    int scoreAway = 0;
+    private static final int SCORER_REQUEST_HOME = 1;
+    private static final int SCORER_REQUEST_AWAY = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_match);
-        //Output Text
-        homeName = findViewById(R.id.txt_home);
-        awayName = findViewById(R.id.txt_away);
-        //Img
-        homeIcon = findViewById(R.id.home_logo);
-        awayIcon = findViewById(R.id.away_logo);
-        //Score
-        awayScore = findViewById(R.id.score_away);
-        homeScore = findViewById(R.id.score_home);
+
+        tvHome = findViewById(R.id.txt_home);
+        tvAway = findViewById(R.id.txt_away);
+
+        tvSkorHome = findViewById(R.id.score_home);
+        tvSkorAway = findViewById(R.id.score_away);
+
+        tvScorerHome = findViewById(R.id.scorer_home);
+        tvScorerAway = findViewById(R.id.scorer_away);
+
+        tvSkorHome.setText(String.valueOf(0));
+        tvSkorAway.setText(String.valueOf(0));
+
+        imgHomeLogo = findViewById(R.id.home_logo);
+        imgAwayLogo = findViewById(R.id.away_logo);
         //======================================================================
         //dari activity main!
         //======================================================================
         Bundle extras = getIntent().getExtras();
-        //Ambil inputan form dari main
+        Data data = extras.getParcelable("key");
 
-        //Edit Tex
-        homeTeam = extras.getString("inputHome");
-        awayTeam = extras.getString("inputAway");
+        if (extras != null) {
+            tvHome.setText(data.getTeamHome());
+            tvAway.setText(data.getTeamAway());
+            uriHome = data.getLogoHomeUri();
+            uriAway = data.getLogoAwayUri();
 
-        //Image
-
-        if (extras != null){
-
-            imageUriHome = Uri.parse(extras.getString("iconHome"));
-            imageUriAway = Uri.parse(extras.getString("iconAway"));
-            //Attribut image
-            bitmapHome = null;
-            bitmapAway = null;
-
-            try{
-                bitmapHome = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUriHome);
-                bitmapAway = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUriAway);
-            }catch(IOException e){
+            try {
+                bitmapHome = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uriHome);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                bitmapAway = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uriAway);
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            //Menampung output dari inputan main
-            homeName.setText(homeTeam);
-            awayName.setText(awayTeam);
-            homeIcon.setImageBitmap(bitmapHome);
-            awayIcon.setImageBitmap(bitmapAway);
-
+            imgHomeLogo.setImageBitmap(bitmapHome);
+            imgAwayLogo.setImageBitmap(bitmapAway);
         }
-
     }
     //======================================================================
     //dari activity main!
     //======================================================================
 
 
-    //===================================================
-    //Button Nambah Score
-    public void handleScoreHome(View view) {
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SCORER_REQUEST_HOME) {
+            if (resultCode == RESULT_OK) {
+                String returnScorerNameHome = data.getStringExtra("score_key");
+                scoreHome++;
+                tvSkorHome.setText(String.valueOf(scoreHome));
 
-        scoreHome = scoreHome + 1;
-        homeScore.setText(String.valueOf(scoreHome));
+                String scorerlamaHome;
+                scorerlamaHome = tvScorerHome.getText().toString();
 
+                tvScorerHome.setText(scorerlamaHome + "\n" + returnScorerNameHome);
+            }
+        }
+        else if (requestCode == SCORER_REQUEST_AWAY) {
+            if (resultCode == RESULT_OK) {
+                String returnScoreNameAway = data.getStringExtra("score_key");
+                scoreAway++;
+                tvSkorAway.setText(String.valueOf(scoreAway));
+
+                String scorerlamaAway;
+                scorerlamaAway = tvScorerAway.getText().toString();
+
+                tvScorerAway.setText(scorerlamaAway + "\n" + returnScoreNameAway);
+            }
+        }
     }
 
-    public void handleScoreAway(View view) {
-
-        scoreAway = scoreAway + 1;
-        awayScore.setText(String.valueOf(scoreAway));
+    public void btn_ScoreHome(View view) {
+        Intent intent = new Intent(this, ScorerActivity.class);
+        startActivityForResult(intent, SCORER_REQUEST_HOME);
     }
-    //===================================================
 
-    //Link dan lihat hasil ke result activity
-    public void handleResult(View view) {
+    public void btn_ScoreAway(View view) {
+        Intent intent = new Intent(this, ScorerActivity.class);
+        startActivityForResult(intent, SCORER_REQUEST_AWAY);
+    }
+
+    public void btn_cekHasil(View view) {
+        String hasil;
 
         Intent intent = new Intent(this, ResultActivity.class);
-        //Dari tambah button score
-        intent.putExtra("homeScore", scoreHome);
-        intent.putExtra("awayScore", scoreAway);
-        //Dari output nama team
-        intent.putExtra("homeName", homeTeam);
-        intent.putExtra("awayName", awayTeam);
 
+        if (scoreHome > scoreAway) {
+            hasil = tvHome.getText().toString() + " is winner";
+        } else if (scoreHome < scoreAway) {
+            hasil = tvAway.getText().toString() + " is winner";
+        }
+        else {
+            hasil = "DRAW";
+        }
+
+        intent.putExtra(HASILKEY, hasil);
         startActivity(intent);
-
     }
 }

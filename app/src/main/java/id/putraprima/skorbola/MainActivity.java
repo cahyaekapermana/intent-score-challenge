@@ -16,101 +16,102 @@ import android.widget.Toast;
 
 import java.io.IOException;
 
+import id.putraprima.skorbola.model.Data;
+
 public class MainActivity extends AppCompatActivity {
 
-    //image view
-    ImageView homeIconImage, awayIconImage;
-    EditText homeText, awayText;
-    //uri load gambar
-    Uri imageUriHome;
-    Uri imageUriAway;
-    //Bitmap
-    Bitmap bitmapHome;
-    Bitmap bitmapAway;
-    //TAG
-    private static final String TAG = MainActivity.class.getCanonicalName();
+    private EditText inputHome;
+    private EditText inputAway;
+    private ImageView logoHome;
+    private ImageView logoAway;
 
+    private Uri uriImageHome;
+    private Uri uriImageAway;
+    private Bitmap bitmapHome;
+    private Bitmap bitmapAway;
+
+    private static final String TAG = MainActivity.class.getCanonicalName();
+    private static final int GALLERY_REQUEST_CODE_HOME = 1;
+    private static final int GALLERY_REQUEST_CODE_AWAY = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Find Id edit text
-        homeText = findViewById(R.id.home_team);
-        awayText = findViewById(R.id.away_team);
-        //Find id image view
-        homeIconImage = findViewById(R.id.home_logo);
-        awayIconImage = findViewById(R.id.away_logo);
 
+        inputHome = findViewById(R.id.home_team);
+        inputAway = findViewById(R.id.away_team);
+
+        logoHome = findViewById(R.id.home_logo);
+        logoAway = findViewById(R.id.away_logo);
     }
-
-    //3. Ganti Logo Home Team
-
-    public void handleHomeLogo(View view) {
-
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, 1);
-    }
-    //4. Ganti Logo Away Team
-
-    public void handleAwayLogo(View view) {
-
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, 2);
-
-    }
-    //Load gallery atau kamera
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_CANCELED){
+        if (resultCode == RESULT_CANCELED) {
             return;
         }
-        if (requestCode == 1){
-            if (data != null){
+
+        if (requestCode == GALLERY_REQUEST_CODE_HOME) {
+            if (data != null) {
                 try {
-                    imageUriHome = data.getData();
-                    bitmapHome = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUriHome);
-                    homeIconImage.setImageBitmap(bitmapHome);
-                } catch (IOException e){
-                    Toast.makeText(this, "Tak bisa load gambar", Toast.LENGTH_SHORT).show();
+                    uriImageHome = data.getData();
+                    bitmapHome = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uriImageHome);
+                    logoHome.setImageBitmap(bitmapHome);
+                } catch (IOException e) {
+                    Toast.makeText(this, "Can't load image", Toast.LENGTH_SHORT).show();
                     Log.e(TAG, e.getMessage());
                 }
             }
-        }else if (requestCode == 2){
-            if (data != null){
+        }
+        else if (requestCode == GALLERY_REQUEST_CODE_AWAY) {
+            if (data != null) {
                 try {
-                    imageUriAway = data.getData();
-                    bitmapAway = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUriAway);
-                    awayIconImage.setImageBitmap(bitmapAway);
-                } catch (IOException e){
-                    Toast.makeText(this, "Tak bisa load gambar", Toast.LENGTH_SHORT).show();
+                    uriImageAway = data.getData();
+                    bitmapAway = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uriImageAway);
+                    logoAway.setImageBitmap(bitmapAway);
+                } catch (IOException e) {
+                    Toast.makeText(this, "Can't load image", Toast.LENGTH_SHORT).show();
                     Log.e(TAG, e.getMessage());
                 }
             }
         }
     }
 
-    //5. Next Button Pindah Ke MatchActivity
+    public void handleHomeLogo(View view) {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, GALLERY_REQUEST_CODE_HOME);
+    }
+
+    public void handleAwayLogo(View view) {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, GALLERY_REQUEST_CODE_AWAY);
+    }
+
     public void handleNext(View view) {
+        String home = inputHome.getText().toString();
+        String away = inputAway.getText().toString();
 
-        //Input Edit Text
-        String inputHome = homeText.getText().toString();
-        String inputAway = awayText.getText().toString();
-        if (!inputHome.equals("") && !inputAway.equals("") && bitmapHome != null && bitmapAway != null){
+        Intent intent = new Intent(this, MatchActivity.class);
+        Data data = new Data(home, away, uriImageHome, uriImageAway);
 
-            Intent intent = new Intent(this, MatchActivity.class);
-            intent.putExtra("inputHome", inputHome);
-            intent.putExtra("inputAway", inputAway);
-            intent.putExtra("iconHome", imageUriHome.toString());
-            intent.putExtra("iconAway", imageUriAway.toString());
-            startActivity(intent);
-        }else{
-            Toast.makeText(this, "Isi seluruh data terlebih dahulu!", Toast.LENGTH_SHORT).show();
+
+        if (home.isEmpty()) {
+            inputHome.setError("Tidak boleh kosong");
         }
-
+        else if (away.isEmpty()) {
+            inputAway.setError("Tidak boleh kosong");
+        }
+        else if (bitmapHome == null) {
+            Toast.makeText(this, "tambahkan gambar!", Toast.LENGTH_SHORT).show();
+        }
+        else if (bitmapAway == null) {
+            Toast.makeText(this, "tambahkan gambar!", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            intent.putExtra("key", data);
+            startActivity(intent);
+        }
     }
-
 }

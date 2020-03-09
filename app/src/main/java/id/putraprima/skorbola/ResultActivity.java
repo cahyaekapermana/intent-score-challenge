@@ -7,33 +7,21 @@ import android.widget.TextView;
 
 public class ResultActivity extends AppCompatActivity {
 
-    TextView varResult;
-    TextView varWinner;
+    private TextView result;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
 
-        varResult = findViewById(R.id.txt_result);
-        varWinner = findViewById(R.id.txt_winner);
+        result = findViewById(R.id.txt_winner);
 
-        Bundle extras = getIntent().getExtras();
-        // get nilai dari match
-        int homeResult = extras.getInt("homeScore");
-        int awayResult = extras.getInt("awayScore");
-        String txtHomeName = extras.getString("homeName");
-        String txtAwayName = extras.getString("awayName");
+        Bundle bundle = getIntent().getExtras();
+        String value = bundle.getString("hasil");
 
-        if(extras != null ){
-            varResult.setText("Final Score : "+String.valueOf(homeResult) + " - " + String.valueOf(awayResult));
-            if(homeResult > awayResult){
-                varWinner.setText("Tim "+txtHomeName + " adalah pemenangnya!");
-            }else if(awayResult > homeResult){
-                varWinner.setText("Tim "+txtAwayName + " adalah pemenangnya!");
-            }else{
-                varWinner.setText("Draw Wkwk");
-            }
+        if (bundle != null) {
+            result.setText(value);
         }
 
     }
